@@ -1,3 +1,4 @@
+#include <ArduinoJson.h>
 
 #include <ESP8266HTTPClient.h>
 
@@ -15,7 +16,7 @@ const char* ssid = "REPLACE_WITH_YOUR_SSID";
 const char* password = "REPLACE_WITH_YOUR_PASSWORD";
 
 //Your Domain name with URL path or IP address with path
-const char* serverName = "http://192.168.1.106:1880/update-sensor";
+const char* serverName = "http://192.168.1.106:1880/agent";
 
 
 #include <Adafruit_Sensor.h>
@@ -33,7 +34,11 @@ uint32_t delayMS;
 #define soil_humidity_enable D0
 #define photocell_enable D1
 
-#define moist_photocell_input = A0
+#define moist_photocell_input A0
+
+#define waterPump A7
+#define bigLED A8
+#define smallLED A9
 
 
 void setup() {
@@ -44,12 +49,22 @@ void setup() {
   dht.temperature().getSensor(&sensor);
   delayMS = sensor.min_delay / 1000;
 
+  StaticJsonDocument<400> doc;
   int temperature_value;
   int soil_humidity_value;
   int photocell_value;
 
+  int setTemperature = 0;
+  int setHumidity = 0;
+  int setBrightness = 0;
+  
+
   pinMode(soil_humidity_enable, OUTPUT);
   pinMode(photocell_enable, OUTPUT);
+
+  pinMode(waterPump, OUTPUT);
+  pinMode(bigLED, OUTPUT);
+  pinMode(smallLED, OUTPUT);
 
   WiFi.begin(ssid, password);
   Serial.println("Connecting");
@@ -90,7 +105,7 @@ void loop() {
   //get photocell value from input
   digitalWrite(photocell_enable, HIGH); 
   photocell_value = analogRead(moist_photocell_input);
-  digitalWrite(soil_humidity_enable, LOW);
+  digitalWrite(photocell_enable, LOW);
   delay(2000);  
 
 
@@ -106,8 +121,8 @@ void loop() {
     http.addHeader("Content-Type", "application/json");
 
     char json_msg[200];
-    sprintf(json_msg, "{\"board_id\":%d,\"temperature\": %d,\"soil_humidity\":%d,\"photocell\":%d}",
-                                     self_id, temperature_value, soil_humidity_value, photocell_value);
+    sprintf(json_msg, "{\"humidity\":%d,\"temperature\":%d,\"brightness\":%d}",
+                                     soil_humidity_value, temperature_value, photocell_value);
     String httpRequestData = json_msg;
 
     // Send HTTP POST request
@@ -115,16 +130,24 @@ void loop() {
 
     Serial.print("HTTP Response code: ");
     Serial.println(httpResponseCode);
-
+    
     if(httpResponseCode>0){
       String response_payload = http.getString();
-      Serial.println(response_payload);             //todo: read server commands and activate actuators
+      Serial.println(response_payload);  
+      DeserializationError error = deserializeJson(doc, response_payload);
+      if (error){
+        Serial.print(F("deserializeJson() failed: "));
+        Serial.println(error.c_str());
+        return;
+      }
+      setTemperature = doc["setTemperature"];
+      setHumidity = doc["setHumidity"];
+      setBrightness = doc["setBrightness"];
     }
+    http.end(); 
+  }
+  //todo do action
 
-    http.end();
-     
-
-    
-  }    
+      
 
 }
