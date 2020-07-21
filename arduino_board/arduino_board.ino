@@ -1,55 +1,152 @@
-#include <Arduino_FreeRTOS.h>
+#include <ArduinoJson.h>
+
+#include <ESP8266HTTPClient.h>
 
 
-TaskHandle_t TaskHandle_2;
-TaskHandle_t TaskHandle_3;
+#include <WiFiClient.h>
+#include <WiFiServer.h>
+
+
+#include <ESP8266WiFi.h>
+
+char* ssid = "Irancell-TD-TK2510-8430";
+char* password = "8718523e77";
+
+//Your Domain name with URL path or IP address with path
+char* serverName = "http://192.168.1.200:8080/agent";
+
+
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
+
+#define self_id = 1;      //board id(for server authorization) 
+
+#define DHTPIN D2
+#define DHTTYPE    DHT11 
+DHT_Unified dht(DHTPIN, DHTTYPE);
+uint32_t delayMS;
+
+
+#define soil_humidity_enable D0
+#define photocell_enable D1
+
+#define moist_photocell_input A0
+
+#define waterPump D7
+#define bigLED D8
+#define smallLED D9
+
+
+int temperature_value;
+int soil_humidity_value;
+int photocell_value;
+
+int setTemperature = 0;
+int setHumidity = 0;
+int setBrightness = 0;
+
+StaticJsonDocument<400> doc;
+
 
 void setup() {
-Serial.begin(9600);
-Serial.println("In setup function.");
+  Serial.begin(9600);
+  
+  dht.begin();
+  sensor_t sensor;
+  dht.temperature().getSensor(&sensor);
+  delayMS = sensor.min_delay / 1000;
+  
 
-pinMode(3, INPUT);
-pinMode(9, OUTPUT);
+  pinMode(soil_humidity_enable, OUTPUT);
+  pinMode(photocell_enable, OUTPUT);
 
-attachInterrupt(digitalPinToInterrupt(3), ExternalInterrupt, CHANGE);
+  pinMode(waterPump, OUTPUT);
+  pinMode(bigLED, OUTPUT);
+  pinMode(smallLED, OUTPUT);
 
-xTaskCreate(MyTask2, "Task2", 100, NULL, 2, &TaskHandle_2);
-xTaskCreate(MyTask3, "Task3", 100, NULL, 3, &TaskHandle_3);
+  WiFi.begin(ssid, password);
+  Serial.println("Connecting");
+  while(WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.print("Connected to WiFi network with IP Address: ");
+  Serial.println(WiFi.localIP());
+  
 }
 
 void loop() {
-// Idle task, it will run whenever CPU is idle.
-//Serial.println("Loop function");
-//delay(1000);
-}
 
-static void ExternalInterrupt(){
 
-Serial.println("ISR starting task2");
-xTaskResumeFromISR(TaskHandle_2);
-Serial.println("Leaving ISR.");
-taskYIELD();
-}
+  //get temperature from dht11 sensor
+  delay(delayMS);
+  sensors_event_t event;
+  dht.temperature().getEvent(&event);
+  if (isnan(event.temperature)) {
+    Serial.println(F("Error reading temperature!"));
+    return;
+  }
+  else {
+    temperature_value = event.temperature;
+  }
 
-static void MyTask2(void *pvParameters){
-Serial.println("Task 2 started.");
+  //wait for 5 seconds
+  delay(2000); 
 
-for(int i=0; i<10; i++){
-if(i%2 == 0){
-digitalWrite(9, HIGH);
-vTaskDelay( 1000 / portTICK_PERIOD_MS );
-}
-else{
-digitalWrite(9, LOW);
-vTaskDelay( 1000 / portTICK_PERIOD_MS );
-}
-}
-Serial.println("Task 2 finished.");
-vTaskSuspend(NULL);
-}
+  //get soil_humidity from input
+  digitalWrite(soil_humidity_enable, HIGH); 
+  delay(2000);
+  soil_humidity_value = analogRead(moist_photocell_input);
+  digitalWrite(soil_humidity_enable, LOW);
 
-static void MyTask3(void *pvParameters){
-Serial.println("Task3 running, suspending all tasks.");
-vTaskSuspend(TaskHandle_2);
-vTaskDelete(NULL);
+  //get photocell value from input
+  digitalWrite(photocell_enable, HIGH); 
+  delay(2000);  
+  photocell_value = analogRead(moist_photocell_input);
+  digitalWrite(photocell_enable, LOW);
+
+
+  //Check WiFi connection status
+  if(WiFi.status()== WL_CONNECTED){
+
+    HTTPClient http;
+
+    // Your Domain name with URL path or IP address with path
+    http.begin(serverName);
+
+    // Specify content-type header
+    http.addHeader("Content-Type", "application/json");
+
+    char json_msg[200];
+    sprintf(json_msg, "{\"humidity\":%d,\"temperature\":%d,\"brightness\":%d}",
+                                     soil_humidity_value, temperature_value, photocell_value);
+    String httpRequestData = json_msg;
+
+    // Send HTTP POST request
+    int httpResponseCode = http.POST(httpRequestData);
+
+    Serial.print("HTTP Response code: ");
+    Serial.println(httpResponseCode);
+    
+    if(httpResponseCode>0){
+      String response_payload = http.getString();
+      Serial.println(response_payload);
+      DeserializationError error = deserializeJson(doc, response_payload);
+      if (error){
+        Serial.print(F("deserializeJson() failed: "));
+        Serial.println(error.c_str());
+        return;
+      }
+      setTemperature = doc["setTemperature"];
+      setHumidity = doc["setHumidity"];
+      setBrightness = doc["setBrightness"];
+    }
+    http.end(); 
+  }
+  //todo do action
+
+      
+
 }
