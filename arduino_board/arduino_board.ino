@@ -120,6 +120,11 @@ void loop() {
     http.addHeader("Content-Type", "application/json");
 
     char json_msg[200];
+
+    //scale sensor values to same variables in server
+    soil_humidity_value = (soil_humidity_value*95/1024)+5;
+    photocell_value = (photocell_value*5000/1024)+1000;
+    
     sprintf(json_msg, "{\"humidity\":%d,\"temperature\":%d,\"brightness\":%d}",
                                      soil_humidity_value, temperature_value, photocell_value);
     String httpRequestData = json_msg;
@@ -145,7 +150,31 @@ void loop() {
     }
     http.end(); 
   }
-  //todo do action
+
+  
+  // activate actuators
+  if ((setHumidity - soil_humidity_value)>20){
+    digitalWrite(waterPump, HIGH);
+    delay(2000);
+    digitalWrite(waterPump, LOW);
+  }
+
+  if (setBrightness>=2000){
+    if(setBrightness<3000){
+      digitalWrite(smallLED, HIGH);
+    }  
+    else if(setBrightness>=3000&&setBrightness<4000){
+      digitalWrite(bigLED, HIGH);
+    }
+    else{
+      digitalWrite(smallLED, HIGH);
+      digitalWrite(bigLED, HIGH);
+    }
+  }
+  if(setBrightness<2000){
+      digitalWrite(smallLED, LOW);
+      digitalWrite(bigLED, LOW);
+  }
 
       
 
