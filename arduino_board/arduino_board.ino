@@ -33,9 +33,9 @@ uint32_t delayMS;
 
 #define moist_photocell_input A0
 
-#define waterPump D7
-#define bigLED D8
-#define smallLED D9
+#define red D7
+#define yellow D8
+
 
 
 int temperature_value;
@@ -61,10 +61,13 @@ void setup() {
   pinMode(soil_humidity_enable, OUTPUT);
   pinMode(photocell_enable, OUTPUT);
 
-  pinMode(waterPump, OUTPUT);
-  pinMode(bigLED, OUTPUT);
-  pinMode(smallLED, OUTPUT);
 
+  pinMode(red, OUTPUT);
+  pinMode(yellow, OUTPUT);
+
+  digitalWrite(yellow, LOW);
+  digitalWrite(red, HIGH);
+  
   WiFi.begin(ssid, password);
   Serial.println("Connecting");
   while(WiFi.status() != WL_CONNECTED) {
@@ -154,26 +157,26 @@ void loop() {
   
   // activate actuators
   if ((setHumidity - soil_humidity_value)>20){
-    digitalWrite(waterPump, HIGH);
+    digitalWrite(yellow, LOW);
+    digitalWrite(red, LOW);
     delay(2000);
-    digitalWrite(waterPump, LOW);
+    digitalWrite(yellow, LOW);
+    digitalWrite(red, HIGH);
   }
 
   if (setBrightness>=2000){
     if(setBrightness<3000){
-      digitalWrite(smallLED, HIGH);
+      digitalWrite(yellow, HIGH);
+      digitalWrite(red, LOW);
     }  
-    else if(setBrightness>=3000&&setBrightness<4000){
-      digitalWrite(bigLED, HIGH);
-    }
     else{
-      digitalWrite(smallLED, HIGH);
-      digitalWrite(bigLED, HIGH);
+      digitalWrite(yellow, HIGH);
+      digitalWrite(red, HIGH);
     }
   }
   if(setBrightness<2000){
-      digitalWrite(smallLED, LOW);
-      digitalWrite(bigLED, LOW);
+      digitalWrite(yellow, LOW);
+      digitalWrite(red, HIGH);
   }
 
       
