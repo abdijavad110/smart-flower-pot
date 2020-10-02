@@ -1,0 +1,32 @@
+:root {
+    --sunshine: #e8d60f;
+}
+
+/* font-Gandom */
+@font-face {
+    font-family: Gandom;
+    src: url('http://fonts.codearena.ir/rastikerdar/gandom/gandom.eot');
+    src: url('http://fonts.codearena.ir/rastikerdar/gandom/gandom.eot?#iefix') format('embedded-opentype'),
+    url('http://fonts.codearena.ir/rastikerdar/gandom/gandom.woff') format('woff'),
+    url('http://fonts.codearena.ir/rastikerdar/gandom/gandom.ttf') format('truetype');
+    font-weight: normal;
+}
+
+body {
+    padding: 50px;
+    font-family: Gandom;
+    font-size: 14px;
+}
+    /*font: 14px "Lucida Grande", Helvetica, Arial, sans-serif; }*/
+
+.label {
+    font-family: Gandom;
+    font-size: 17px;
+}
+
+
+a {
+    color: #00B7FF; }
+
+
+

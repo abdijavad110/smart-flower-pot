@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html class="h-100">
+  <head>
+    <title>Smart Garden Control</title>
+
+    <link rel='stylesheet' href='/stylesheets/bootstrap.min.css' />
+    <script src="/javascripts/jquery.min.js"></script>
+
+    <script src="https://kit.fontawesome.com/003f680a16.js" crossorigin="anonymous"></script>
+
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+    <script src="/javascripts/index.js"></script>
+
+  </head>
+
+  <body class="p-0 h-100" dir="rtl">
+    <div class="row h-100 w-100 m-0">
+      <div class="col-md-2 bg-dark px-4" style="padding-top: 8em;">
+        <button type="button" id="onoff_button" class="btn btn-outline-danger btn-lg btn-block w-100">غیرفعال</button>
+        <h5 class="p-1 mt-p-1 mt-4 text-center text-muted">واحدهای اندازه‌گیری</h5>
+        <hr class="mt-0 mb-1" style="border-color: gray">
+        <p class="p-1 mt-p-1 mt-0 mb-0 text-center text-muted">روشنایی: Lux</p>
+        <p class="p-1 mt-p-1 mt-0 mb-0 text-center text-muted">رطوبت: Relative Humidity</p>
+        <p class="p-1 mt-p-1 mt-0 mb-0 text-center text-muted">دما: Celsius</p>
+        <img src="/images/tall_flower1.png" style="max-width: 90%; margin-top: 15em;">
+      </div>
+
+      <div class="col-md-10 d-flex justify-content-start bg-transparent px-5" style="padding-top: 8em;">
+        <div class="row w-100 d-flex justify-content-around" id="agent_list">
+        </div>
+      </div>
+
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top p-1">
+      <h4 class="navbar-brand mb-0" href="#">سامانه‌ی هوشمند مدیریت گلخانه</h4>
+      <div class="collapse navbar-collapse" id="navbarColor01">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link p-1 text-center">حمیدرضا علی‌خانی، جواد عبدی، علی احمدی‌تشنیزی</a>
+            <a class="nav-link p-1 text-center">درس طراحی سیستم‌های نهفته، استاد حسینی منزه، بهار ۹۹</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+  </body>
+</html>
